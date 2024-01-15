@@ -38,42 +38,46 @@ done
 
 shift $((OPTIND-1))
 
-if [[ $# -eq 1 ]]; then
-    selected=$1
-else
-    complete_list=$(find ~/GitHub/ ~/personal/ -type d -name .git -exec dirname {} \; 2>/dev/null | grep -F -v -e "(^./vendor/|^./var/|^./node_module/)")
-    last_input=""
-
-    echo "$complete_list"
-
-    while true; do
-        echo
-        echo -n "Enter a fuzzy search pattern: "
-        read -e -r -i "$last_input" fuzzy_pattern
-
-        filtered_list=$(echo "$complete_list" | grep --line-buffered -i "$fuzzy_pattern")
-
-        if [ -z "$filtered_list" ]; then
-            echo
-            echo "No matching results found."
-            continue
-        fi
-
-        if [ $(echo "$filtered_list" | wc -l) -eq 1 ]; then
-            echo
-            echo "Selected result: $filtered_list"
-            selected=$filtered_list
-            break
-        fi
-
-        echo
-        echo "Matching results:"
-        echo "$filtered_list"
-
-        # Save the current input as the last input for the next iteration
-        last_input="$fuzzy_pattern"
-    done
+if ! command -v tmux &> /dev/null; then
+    echo "Error: tmux is not installed. Please install tmux before running this script."
+    exit 1
 fi
+
+# Create completet list
+
+complete_list=$(find ~/GitHub/ ~/personal/ -type d -name .git -exec dirname {} \; 2>/dev/null | grep -F -v -e "vendor var node_module")
+
+last_input=""
+
+echo "$complete_list"
+
+while true; do
+    echo
+    echo -n "Enter a fuzzy search pattern: "
+    read -e -r -i "$last_input" fuzzy_pattern
+
+    filtered_list=$(echo "$complete_list" | grep --line-buffered -i "$fuzzy_pattern")
+
+    if [ -z "$filtered_list" ]; then
+        echo
+        echo "No matching results found."
+        continue
+    fi
+
+    if [ $(echo "$filtered_list" | wc -l) -eq 1 ]; then
+        echo
+        echo "Selected result: $filtered_list"
+        selected=$filtered_list
+        break
+    fi
+
+    echo
+    echo "Matching results:"
+    echo "$filtered_list"
+
+    # Save the current input as the last input for the next iteration
+    last_input="$fuzzy_pattern"
+done
 
 if [[ -z $selected ]]; then
     exit 0
