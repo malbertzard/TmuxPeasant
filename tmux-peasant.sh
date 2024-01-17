@@ -44,8 +44,12 @@ if ! command -v tmux &> /dev/null; then
 fi
 
 # Create completet list
-
-complete_list=$(find ~/GitHub/ ~/personal/ -type d -name .git -exec dirname {} \; 2>/dev/null | grep -F -v -e "vendor var node_module")
+complete_list=""
+if command -v fd &> /dev/null; then
+    complete_list=$(fd --hidden --type d . --base-directory ~/GitHub/ --no-ignore | grep "/.git/$" | xargs -I {} dirname {})
+else
+    complete_list=$(find ~/GitHub/ -type d -name .git -exec dirname {} \; 2>/dev/null | grep -F -v -e "vendor var node_modules")
+fi
 
 last_input=""
 
